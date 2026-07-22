@@ -2,7 +2,7 @@
 
 <br/>
 
-# Aegis Core
+# Agentic RAG for Enterprise Compliance
 
 <p>A multi-agent compliance auditing engine — replacing single-pass RAG with a cyclical<br/>graph state machine that verifies its own outputs before writing a single audit line.</p>
 
