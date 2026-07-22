@@ -1,0 +1,24 @@
+# Environment & Secrets
+.env
+*.env
+*.pem
+
+# Python Caches
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environments
+venv/
+.venv/
+env/
+
+# IDE & OS Files
+.DS_Store
+.vscode/
+.idea/
+
+# Local Vector DB & Output Artifacts
+qdrant_storage/
+*.pdf
+!sample_contract.pdf

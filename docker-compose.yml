@@ -1,0 +1,39 @@
+services:
+  # --- Service A: Your Pre-existing Optimized Vector Node ---
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: aegis_qdrant_db
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant_storage:/qdrant/storage
+    environment:
+      - QDRANT__STORAGE__ON_DISK_PAYLOAD=true
+      - QDRANT__STORAGE__WAL__WAL_CAPACITY_MB=32
+      - QDRANT__STORAGE__PERFORMANCE__MAX_SEARCH_THREADS=1
+      - QDRANT__STORAGE__PERFORMANCE__MAX_OPTIMIZATION_THREADS=1
+    deploy:
+      resources:
+        limits:
+          memory: 1024M
+    restart: unless-stopped
+
+  # --- Service B: Your Appended FastAPI Multi-Agent Engine ---
+  aegis-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: aegis_api_container
+    ports:
+      - "8000:8000"
+    environment:
+      - QDRANT_HOST=qdrant  # Direct match to the database service key named above
+      - QDRANT_PORT=6333
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434  # Links back out to your local Mac Ollama instance
+    depends_on:
+      - qdrant
+    restart: unless-stopped
+
+volumes:
+  qdrant_storage:

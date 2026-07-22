@@ -1,0 +1,15 @@
+fastapi
+uvicorn[standard]
+pydantic
+pydantic-settings
+python-dotenv
+python-multipart
+qdrant-client
+langgraph
+langchain-core
+langchain-community
+langchain-ollama
+pypdf
+langchain-text-splitters
+reportlab
+streamlit
