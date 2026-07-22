@@ -1,103 +1,196 @@
-🛡️ Product Requirements Document (PRD)
-Project Name: Aegis
-Subtitle: Multi-Agent Compliance Audit & Risk Assessment Engine
-Author: S Syam Preetham
-Role: Lead AI Engineer & Product Owner
-Target Architecture: Production-Grade Agentic RAG
-1. Executive Summary & Problem Statement
-The Problem
-Modern enterprises handle thousands of complex vendor agreements, employment contracts, and privacy policies. Concurrently, regulatory frameworks (e.g., financial directives, data privacy mandates) shift rapidly.
-Standard RAG (Retrieval-Augmented Generation) architectures fail at legal compliance auditing because they rely on simple, flat keyword or vector similarity. They treat isolated text fragments out of context, leading to critical hallucinations, overlooked legal contradictions, and high financial/regulatory risks.
-The Solution
-Aegis is an automated, production-grade enterprise risk manager. By utilizing a cognitive state loop (Agentic RAG) rather than a linear pipeline, Aegis orchestrates a multi-agent system to ingest complex legal PDFs, break down auditing requirements into programmatic sub-tasks, cross-examine data partitions with precise payload filtering, and run strict semantic verification checks to eliminate hallucinations entirely.
-2. Core Personas & User Stories
-Persona A: The Compliance Officer (Startup / SME)
-Need: Lacks the budget for an extensive human legal team but must verify that incoming vendor SaaS agreements do not breach native country compliance regulations.
-Persona B: The Enterprise Legal Auditor (MNC / Fintech)
-Need: Must rapidly audit ten thousand legacy internal data retention clauses against an updated 2026 data compliance mandate without reading every page manually.
-User Stories
-As a Compliance Officer, I want to upload a new vendor contract PDF and select a specific regulatory framework so that I can automatically receive a structured risk score and gap analysis report.
-As a Legal Auditor, I want the system to flag the exact page and paragraph numbers where a contract clause explicitly contradicts a regulatory mandate so that I can audit with verifiable evidence.
-3. System Architecture & Component Mapping
-To ensure deterministic behavior, high performance, and rapid testing cycles on Apple Silicon (M1 hardware), the system uses a decoupled, asynchronous micro-architecture.
-Component
-Technology
-Functional Justification
-API Layer
-FastAPI
-Native asynchronous (async/await) execution handling long-running multi-agent reasoning loops without blocking concurrent web traffic.
-Agent Orchestration
-LangGraph
-Models the multi-agent system as a strict state machine. Allows explicit, deterministic routing loops (e.g., routing back to retrieval if verification fails).
-Vector Space
-Qdrant
-Enterprise-grade vector database supporting advanced Payload Filtering to restrict vector searches dynamically by jurisdiction, date, or document type.
-Local Inference
-Ollama
-Runs quantized local weights (llama3.2:3b / qwen2.5:3b) using Metal acceleration on Apple M1 for local development and zero-cost graph testing.
-Production Inference
-External Cloud (Groq / OpenAI)
-Configured via structural environment variables for ultra-low latency, high-reasoning execution in production environments.
+<div align="center">
 
-4. The Cognitive Agent State Workflow
-Instead of a standard stream, Aegis executes inside an explicit directed graph containing the following key operational nodes:
-[ User Input ] ---> ( Node 1: Deconstruction & Planning Agent )
-                                  |
-                                  v
-                    ( Node 2: Router & Vector Retrieval )
-                                  |
-                                  v
-                    ( Node 3: Legal Auditor Agent )
-                                  |
-                                  v
-              +---> ( Node 4: Hallucination & Citation Critic )
-              |                   |
-    [IF FAILS | Re-Route]         +---> [Passes Verification?]
-              |                                 |
-              +---------------------------------+---> [Generates Final JSON Audit]
+<br/>
 
-Deconstruction & Planning Agent: Parses the user's compliance query into specific, discrete sub-queries.
-Router & Storage Engine: Targets exact document payloads in Qdrant based on metadata attributes.
-Legal Auditor Agent: Evaluates retrieved contexts side-by-side to generate a structured discrepancy draft.
-Hallucination & Citation Critic: Executes a defensive semantic verification pass. If a statement lacks an explicit source document tag or page citation, the graph forces a state rollback to Node 2 for deeper context retrieval.
-5. Success Metrics (KPIs)
-Zero Hallucination Tolerance: 100% of generated risk assessments must explicitly map to a valid source metadata hash from the vector DB.
-Production Readiness: 100% dockerized orchestration via single-command deployments (docker-compose up --build).
-Developer Agility: The complete local environment must execute locally within a sub-10GB RAM memory footprint using hybrid execution schemes.
-Now that the Product Requirements Document is locked and loaded, we are ready to build the literal bones of this application.
+# Aegis Core
 
+<p>A multi-agent compliance auditing engine — replacing single-pass RAG with a cyclical<br/>graph state machine that verifies its own outputs before writing a single audit line.</p>
 
+<br/>
 
+![Python](https://img.shields.io/badge/Python_3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![LangGraph](https://img.shields.io/badge/LangGraph-FF6F61?style=for-the-badge&logoColor=white)
+![Qdrant](https://img.shields.io/badge/Qdrant-DC244C?style=for-the-badge&logo=qdrant&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
 
-## 🏗️ Technical Architecture & M1 Optimization Logs
+<br/>
 
-This section tracks the explicit, production-grade engineering choices implemented to guarantee a low-memory footprint on a constrained hardware environment (Apple Silicon M1, 8GB RAM) without sacrificing enterprise accuracy.
+> **Multi-Agent RAG · Hybrid Vector Search · Deterministic Audit Ledger** &nbsp;|&nbsp; Self-correcting · Citation-verified · Fully containerised
 
-### 💾 1. Database & Container Resource Optimization
-
-The database layer is orchestrated via `docker-compose.yml` with strict, non-default infrastructure bounds to prevent system thermal throttling and memory starvation:
-
-*   **Hard Container Limits (`memory: 1024M`):** Restricts the Docker virtualization engine from allocating more than 1GB of system RAM to the database container, guaranteeing the remaining 7GB is left entirely open for the macOS operating system, local code testing, and inference pipelines.
-*   **Thread Restriction (`MAX_SEARCH_THREADS: 1`):** Limits internal database query workers to a single execution thread. This prevents the database from multi-threading across all CPU cores simultaneously, avoiding major thermal spikes and performance throttling on fanless MacBook Air architectures.
+<br/>
 
 ---
 
-### 🧠 2. Vector Index & Quantization Breakdown
+</div>
 
-Inside `src/database/qdrant_client.py`, the index landscape is built using a compressed schema architecture rather than standard high-dimension defaults:
+## Why This Exists
 
-#### A. Vector Sizing (`size=384`)
-*   **What was done:** Designed the collection schema to accept exactly 384-dimensional dense vectors (mapping directly to lightweight, local embedding pipelines like `all-MiniLM-L6-v2`).
-*   **The Engineering Why:** While legacy enterprise models push 1536- or 4096-dimensional arrays, processing those matrices locally on an 8GB machine causes massive CPU latency. A 384-dimensional architecture provides highly granular semantic compliance maps at a fraction of the computational and memory footprint.
+Standard RAG fails in legal and compliance contexts. It hallucinates in the middle of long documents, chunks text without respecting clause boundaries, and has no mechanism to cross-examine what it just retrieved against what it actually cited.
 
-#### B. Index Memory Bypass (`on_disk=True`)
-*   **What was done:** Forced Qdrant's structural HNSW lookup graphs to write and read directly from SSD storage volumes instead of caching in system memory.
-*   **The Engineering Why:** By default, vector databases attempt to anchor indices entirely in RAM to optimize speed. On an 8GB RAM footprint, processing multi-page legal PDFs would cause immediate system crashes. Forcing the index map to stay on disk entirely protects runtime memory.
+The result: audits that look confident and are silently wrong.
 
-#### C. Compression Matrix (`ScalarType.INT8` & `always_ram=False`)
-*   **What was done:** Applied `INT8` Scalar Quantization, compressing large 32-bit floating-point numbers down to dense 8-bit integers, while forcing the quantization metadata tables to stay off the system RAM.
-*   **The Engineering Why:** This optimization layout decreases the database vector footprint by **nearly 75%**. The system bypasses memory bloating entirely by streaming compressed integer maps dynamically into active memory only at the exact millisecond a search query executes.
-### 🚀 5. Local Inference Architecture Validation Log
-*   **Milestone Reached:** Successfully validated the **Deconstruction & Planning Agent** (`src/agents/nodes/planner.py`) running against quantized local model weights (`llama3.2:3b`).
-*   **Performance Metrics:** Handled local zero-temperature structured extraction loops with zero latency or syntax leakage.
-*   **Outputs Generated:** Raw audit prompts are cleanly split into contextualized search strings containing precise jurisdictional and temporal metadata hooks ready for Qdrant storage filtering.
+Aegis Core approaches this differently. Instead of a single prompt-and-return pipeline, it runs a **cyclical multi-agent graph** where a Planner maps the document, an Auditor identifies violations with direct clause citations, and a Critic rejects the output and triggers a retry loop if the citations don't hold. Nothing reaches the audit ledger unless it passes verification.
+
+<br/>
+
+---
+
+## Key Numbers
+
+<br/>
+
+<div align="center">
+
+| Cyclical Graph | Hybrid Search | Dual-Agent Critic | Fully Containerised |
+|:---:|:---:|:---:|:---:|
+| Eliminates single-pass hallucinations | Dense + sparse retrieval combined | Rejects unverified outputs before logging | Docker Compose — zero infra dependency |
+
+</div>
+
+<br/>
+
+---
+
+## How It Works
+
+<br/>
+
+```
+Contract Document + Policy Standard
+              │
+              ▼
+  Recursive Clause Chunking
+  (15–20% token overlap — preserves clause boundaries)
+              │
+              ▼
+  Qdrant Hybrid Retrieval
+  (Dense semantic + sparse keyword matching)
+              │
+              ▼
+  Planner Agent
+  (Structural analysis — maps document against policy)
+              │
+              ▼
+  Auditor Agent
+  (Violation detection — every finding tied to a clause citation)
+              │
+              ▼
+  ┌─────────────────────────────────────┐
+  │   QA Critic: Citation valid?        │
+  │   Compliance check passed?          │
+  └─────────────────────────────────────┘
+         │                    │
+      [Fail]               [Pass]
+         │                    │
+         ▼                    ▼
+  Refinement Loop      Audit Ledger Output
+  (Retry with          (Structured report +
+   corrected context)   line-item citations)
+```
+
+<br/>
+
+---
+
+## Technical Decisions
+
+<br/>
+
+| Layer | Choice | Rationale |
+|---|---|---|
+| Agent Orchestration | LangGraph | Cyclic loops, state persistence, conditional routing — impossible with basic DAGs |
+| Vector Engine | Qdrant (Dockerised) | Native hybrid search: dense embeddings + exact clause keyword matching |
+| Chunking Strategy | Recursive Text Splitter | 15–20% overlap window preserves paragraph context across clause boundaries |
+| Quality Gate | Auditor-Critic Loop | No output passes without citation validation — eliminates blind pass-throughs |
+| Backend | FastAPI + Uvicorn | Async execution built for enterprise REST endpoints and streaming agent logs |
+| Frontend | Streamlit | Interactive graph visualiser + rapid legal context review |
+
+<br/>
+
+---
+
+## Business Framing
+
+<br/>
+
+> **What's the operational problem?**
+>
+> Manual compliance reviews are slow, expensive, and inconsistent. Legal teams spend hours cross-referencing contracts against policy standards — work that creates bottlenecks, delays contract sign-offs, and introduces human oversight risk at scale.
+
+<br/>
+
+> **What does better look like?**
+>
+> An automated pipeline that reads a contract, maps it against a policy standard, identifies violations with direct clause citations, validates its own findings, and produces a reproducible audit ledger — without a human in the loop until the output is already verified.
+
+<br/>
+
+> **Is this deployable?**
+>
+> Yes. Fully containerised via Docker Compose — `FastAPI` + `Qdrant` + `Streamlit` as independent services. Deploys to AWS ECS, GCP Cloud Run, or on-premise infrastructure with a single command.
+
+<br/>
+
+---
+
+## Tech Stack
+
+<br/>
+
+<div align="center">
+
+![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)
+![LangGraph](https://img.shields.io/badge/LangGraph-FF6F61?style=flat-square)
+![LangChain](https://img.shields.io/badge/LangChain-1C3C3C?style=flat-square)
+![Qdrant](https://img.shields.io/badge/Qdrant-DC244C?style=flat-square&logo=qdrant&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat-square&logo=fastapi&logoColor=white)
+![Streamlit](https://img.shields.io/badge/Streamlit-FF4B4B?style=flat-square&logo=streamlit&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker&logoColor=white)
+![Pydantic](https://img.shields.io/badge/Pydantic-E92063?style=flat-square&logo=pydantic&logoColor=white)
+
+</div>
+
+<br/>
+
+---
+
+## Repository Structure
+
+```
+aegis-compliance-rag/
+├── src/
+│   ├── database/          # Qdrant initialisation and vector indexing
+│   ├── utils/             # PDF reporting and document parsers
+│   └── main.py            # FastAPI entrypoint and route handlers
+├── app.py                 # Streamlit interactive UI + graph visualiser
+├── test_pipeline.py       # Integration tests for graph state machine
+├── test_planner.py        # Unit tests for planner agent reasoning
+├── test_db.py             # Vector database retrieval benchmarks
+├── docker-compose.yml     # Local Qdrant container configuration
+└── requirements.txt       # Production dependencies
+```
+
+<br/>
+
+---
+
+## About
+
+<br/>
+
+<div align="center">
+
+Built by **Syam Preetham** — aspiring PM/BA with a focus on AI products and data-backed decision making.
+
+*Most RAG systems are built to sound right. This one is built to be verifiable.*
+
+<br/>
+
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](your-linkedin-url)
+[![Portfolio](https://img.shields.io/badge/Portfolio-000000?style=for-the-badge&logo=notion&logoColor=white)](your-portfolio-url)
+[![GitHub](https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white)](your-github-url)
+
+<br/>
+
+</div>
